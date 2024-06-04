@@ -1,0 +1,156 @@
+This is how I am checking whether nvidia drivers are OK across all the nodes in one shot:
+1. Create gpu-test-job.yaml template file
+2. 
+```nano gpu-test-job.yaml```
+
+```apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gpu-job-${NODE}
+spec:
+  template:
+    metadata:
+      labels:
+        app: gpu-job
+    spec:
+      restartPolicy: Never
+      runtimeClassName: nvidia
+      containers:
+      - name: cuda-container
+        image: nvcr.io/nvidia/k8s/cuda-sample:vectoradd-cuda11.6.0
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+      nodeSelector:
+        kubernetes.io/hostname: "${NODE}"
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule```
+
+3. apply that template to the K8s cluster nodes
+```kubectl get nodes -o name | cut -f2 -d"/" | while read NODE; do envsubst < gpu-test-job.yaml | kubectl apply -f -; done```
+
+job.batch/gpu-job-node1 created
+job.batch/gpu-job-node2 created
+job.batch/gpu-job-node3 created
+...
+4. Verify whether the jobs have completed successfully:
+
+```kubectl get pods -o wide```
+
+NAME                  READY   STATUS      RESTARTS   AGE   IP               NODE    NOMINATED NODE   READINESS GATES
+gpu-job-node1-7btdv   1/1     Running     0          38s   10.233.102.154   node1   <none>           <none>
+gpu-job-node2-vzkhv   0/1     Completed   0          37s   10.233.75.112    node2   <none>           <none>
+gpu-job-node3-hg8wd   0/1     Completed   0          37s   10.233.71.50     node3   <none>           <none>
+gpu-job-node4-bzngj   0/1     Error       0          37s   10.233.74.124    node4   <none>           <none>
+gpu-job-node5-9nj7t   0/1     Completed   0          37s   10.233.97.165    node5   <none>           <none>
+gpu-job-node6-vvml5   0/1     Completed   0          36s   10.233.75.29     node6   <none>           <none>
+gpu-job-node7-s88z7   0/1     Completed   0          36s   10.233.100.153   node7   <none>           <none>
+gpu-job-node8-p5wr9   0/1     Completed   0          36s   10.233.90.51     node8   <none>           <none>
+
+As you can see node4 is experiencing some issue:
+
+```kubectl logs gpu-job-node4-bzngj```
+
+Failed to allocate device vector A (error code unknown error)!
+[Vector addition of 50000 elements]
+And node1 - stuck in Running state.
+
+6. Cleanup
+
+```kubectl delete jobs -l app=gpu-job```
+
+After the cleanup I've noticed the gpu-job on the node1 has never Completed and is now stuck in Terminating state, have also noticed there are two more deployments stuck in Terminating state:
+
+```kubectl get pods -A --sort-by='{.metadata.creationTimestamp}' -o wide |grep Terminat```
+
+2snislat0h6rl1m0aog15r899au2cckhueu3246pq1kqo   service-7cd4767587-44jtv                          1/1     Terminating   0                22d     10.233.90.29     node8   <none>           <none>
+j9eq3ttn9fd7h0lvai15jp1muvr4gqt9n8btn94pbal6q   service-7879689845-jdfzv                          1/1     Terminating   0                22d     10.233.100.145   node7   <none>           <none>
+default                                         gpu-job-node1-7btdv                               1/1     Terminating   0                54m     10.233.102.154   node1   <none>           <none>
+
+*Next steps*
+I would typically announce the maintenance on this provider and would then perform system upgrade apt update && apt -y dist-upgrade && apt -y autoremove and reboot the nodes.
+However, this time I can see there is a newer version nvidia driver has been released - upon running ubuntu-drivers devices - nvidia-driver-555 is the recommended version now.
+We could give it a shot, I haven't seen any feedback for H100 though https://forums.developer.nvidia.com/t/555-release-feedback-discussion/293652
+*On CUDA toolkit version*
+The system has nvidia-cuda-toolkit of version 11.5, yet nvidia-smi reports CUDA Version: 12.4 (the cuda version that nvidia driver supports - NOT the CUDA toolkit version installed)
+As Michael Kenzel correctly mentioned:
+The version the driver supports has nothing to do with the version you compile and link your program against. A driver that supports CUDA 10.0 will also be able to run an application that was built for CUDA 9.2
+Source: https://stackoverflow.com/questions/53422407/different-cuda-versions-shown-by-nvcc-and-nvidia-smi#comment93719643_53422407  (thanks to 
+[@anil](https://europlotsworkspace.slack.com/team/U03J6616N77)
+ for the link and as outlined here https://ovrclk.slack.com/archives/C06AJ4DH6HW/p1717463599892579?thread_ts=1717459152.574329&cid=C06AJ4DH6HW )
+When running applications in Kubernetes (K8s) pods, you typically mount the host's GPU and CUDA drivers into the container. The containerized application will use the CUDA drivers from the host. If your host has an older version of the CUDA Toolkit, but the application in the container requires a newer version, you can include the required version of the CUDA Toolkit within the container image.
+Evidence (nvcc comes from the CUDA toolkit v11.5 on the host while nvcc installed in the user's container image is built with CUDA toolkit v12.0 version):
+root@node1:~# nvcc --version
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2021 NVIDIA Corporation
+Built on Thu_Nov_18_09:45:30_PST_2021
+Cuda compilation tools, release 11.5, V11.5.119
+Build cuda_11.5.r11.5/compiler.30672275_0
+
+```kubectl -n odr1ektf88hq1hnpt4bhvfq4qpk7teg6krup606rohcs4 exec -ti service-84f5bb58f7-b64lv -- bash -c "nvcc --version"```
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2023 NVIDIA Corporation
+Built on Fri_Jan__6_16:45:21_PST_2023
+Cuda compilation tools, release 12.0, V12.0.140
+Build cuda_12.0.r12.0/compiler.32267302_0
+The idea is to make sure Nvidia driver supports higher CUDA version than the app is using/compiled with.
+I.e. upgrading nvidia CUDA toolkit on the host won't change anything in the K8s/Akash deployment since the CUDA toolkit version Akash deployments gonna have is the one that is in the container image/or gets installed with the container image run script / or via ssh if the tenant decides to.
+FWIW: tenants can also install multiple Nvidia CUDA toolkit versions inside their container and use any version they want, I did that too, back then by simply exporting the right paths (after installing certain CUDA versions of course):
+export PATH="/usr/local/cuda-12.4/bin:$PATH"
+export LD_LIBRARY_PATH=/usr/local/cuda-12.4/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+FWIW 2: what gets mounted into one's GPU container are the paths to the Nvidia drivers and devices, and NOT the CUDA toolkit (!) e.g.:
+
+```kubectl -n odr1ektf88hq1hnpt4bhvfq4qpk7teg6krup606rohcs4 exec -ti service-84f5bb58f7-b64lv -- bash -c "mount | grep vda1"```
+
+/dev/vda1 on /etc/hosts type ext4 (rw,relatime,discard,errors=remount-ro)
+/dev/vda1 on /dev/termination-log type ext4 (rw,relatime,discard,errors=remount-ro)
+/dev/vda1 on /etc/hostname type ext4 (rw,relatime,discard,errors=remount-ro)
+/dev/vda1 on /etc/resolv.conf type ext4 (rw,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/bin/nvidia-smi type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/bin/nvidia-debugdump type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/bin/nvidia-persistenced type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/bin/nvidia-cuda-mps-control type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/bin/nvidia-cuda-mps-server type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.550.54.15 type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.550.54.15 type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/lib/x86_64-linux-gnu/libcuda.so.550.54.15 type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/lib/x86_64-linux-gnu/libcudadebugger.so.550.54.15 type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.550.54.15 type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/lib/x86_64-linux-gnu/libnvidia-gpucomp.so.550.54.15 type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.550.54.15 type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/lib/x86_64-linux-gnu/libnvidia-allocator.so.550.54.15 type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/lib/x86_64-linux-gnu/libnvidia-pkcs11.so.550.54.15 type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/lib/x86_64-linux-gnu/libnvidia-pkcs11-openssl3.so.550.54.15 type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/lib/x86_64-linux-gnu/libnvidia-nvvm.so.550.54.15 type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/lib/firmware/nvidia/550.54.15/gsp_ga10x.bin type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+/dev/vda1 on /usr/lib/firmware/nvidia/550.54.15/gsp_tu10x.bin type ext4 (ro,nosuid,nodev,relatime,discard,errors=remount-ro)
+
+```kubectl -n odr1ektf88hq1hnpt4bhvfq4qpk7teg6krup606rohcs4 exec -ti service-84f5bb58f7-b64lv -- bash -c "mount | grep devtmpfs"```
+
+udev on /run/nvidia-container-devices/GPU-81c9e219-4831-4d68-ccef-badb7f2bc599 type devtmpfs (rw,nosuid,relatime,size=742972676k,nr_inodes=185743169,mode=755,inode64)
+udev on /dev/nvidiactl type devtmpfs (ro,nosuid,noexec,relatime,size=742972676k,nr_inodes=185743169,mode=755,inode64)
+udev on /dev/nvidia-uvm type devtmpfs (ro,nosuid,noexec,relatime,size=742972676k,nr_inodes=185743169,mode=755,inode64)
+udev on /dev/nvidia-uvm-tools type devtmpfs (ro,nosuid,noexec,relatime,size=742972676k,nr_inodes=185743169,mode=755,inode64)
+udev on /dev/nvidia4 type devtmpfs (ro,nosuid,noexec,relatime,size=742972676k,nr_inodes=185743169,mode=755,inode64)
+
+1. *NVIDIA Driver and CUDA Toolkit Compatibility:*
+nvidia-smi reports the highest CUDA Toolkit version supported by the current NVIDIA Driver. This version indicates the maximum CUDA capabilities of the driver, not the CUDA Toolkit installed on the host.
+Kubernetes (K8s) deployments and local applications can use any CUDA Toolkit version supported by the NVIDIA Driver. The driver ensures compatibility as long as the CUDA Toolkit version used by the application is equal to or lower than the version reported by nvidia-smi.
+2. *CUDA Toolkit Installation and Application Usage:*
+The CUDA Toolkit installed on the host is independent of the CUDA Toolkit used by applications within K8s pods. Applications can include the required CUDA Toolkit version within their container images, ensuring they have the necessary tools regardless of the host's installed version.
+Applications compiled with a specific CUDA Toolkit version can run on systems with a driver that supports the same or higher CUDA version. This means that even if the host has an older CUDA Toolkit, the application can still run efficiently if the driver supports the required CUDA version.
+3. *Issues on H100 Provider:*
+The H100 provider has experienced NVIDIA driver lockups and issues since the beginning. (example and reproducer would be xai-org's JAX-based Grok-1 https://github.com/xai-org/grok-1/issues/164#issuecomment-2022572399 )
+There is a new NVIDIA Driver version (v555) recently released. Given the ongoing issues, upgrading to this newer version might(!) resolve the problems. However, it may(!) as well introduce new issues as there haven't been any feedback from the users running H100 GPU's https://forums.developer.nvidia.com/t/555-release-feedback-discussion/293652
+4. *Action Plan:*
+Announce maintenance on the H100 provider to users.
+Perform a system upgrade (apt update && apt -y dist-upgrade && apt -y autoremove) and reboot the nodes.
+[OPTION] Upgrade the NVIDIA driver to the *Beta* version 555 to potentially resolve existing driver issues. (apt update && ubuntu-drivers install and reboot -- should be done along with the system upgrade to reduce amount of reboots) ; though the main Nvidia page still recommends version 550.54.15 (the one we have) when getting there through https://www.nvidia.com/en-in/drivers/ page, leads to https://www.nvidia.com/en-in/drivers/details/222676/  ; you can see 555 is *Beta* here https://www.nvidia.com/en-us/drivers/unix/
+8. *Docs Update:*
+Here are some additional thoughts regarding the documentation:
+https://akash.network/docs/other-resources/archived-resources/provider-build-with-gpu/#install-nvidia-drivers--toolkit
+We are currently installing the nvidia-cuda-toolkit in the "Install the NVIDIA CUDA Toolkit" step. However, I believe this step is unnecessary. Instead, we should rename "Install the NVIDIA CUDA Toolkit" to "Install the NVIDIA Container Toolkit," as the CUDA toolkit is not required, as shown in the prerequisites for https://github.com/NVIDIA/k8s-device-plugin#prerequisites.
+It seems this issue may have been overlooked in the past.
+However, before updating the documentation, we should first attempt to run apt remove nvidia-cuda-toolkit, reboot the node, and verify if we can deploy a GPU Akash Deployment successfully.
