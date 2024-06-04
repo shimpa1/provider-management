@@ -1,0 +1,64 @@
+---
+version: "2.0"
+
+services:
+  app:
+    image: ubuntu:22.04
+    env:
+      - 'SSH_PUBKEY=ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDOQbnqzi6PJxAeffatruJBA1SZd3FEDZUVe4IOiwuApQ3LhJN0z9XBrlKOKw3ar/07aH6uDJH/tQj/pcP9f8XWJf8zhnQ34Z0FyN3H6xT2vrZtKfCM2WaqRH1A5dsLot6CrUVpZsiMgP4B2yX4KCX6oSdxls/unFIiFEmXo0ZuZO0/28spGEeAc6+JryntTPU13jLdGl5MU22eg1WKHVcnzGaweXaYHeISQvM8PcKUtaJi+wfXzzHn8iN+JsLjgAYmeaE7DVNsLcjoQdoPivC3xIlY+NVBhd2/T2OOvAjtlKX39zGK3jUGVCBq2N5wfWbIONVVSUaeX3XJ2deXBntMpLPB1wUlaDI6EV7hs0L2XzzPxmyccXkefTlobyE8PNHov6VONkmYZMinWGp93bA2TkI2hK04Aoq6v6XzrSk6kama86J046yYlP1K+IGYRq6qbmTropaDuY1gpa0utHLQABXk95Td7s7UB/pXK95AoV6Ov3qlwfel9Ftlc6golOc='
+    command:
+      - "sh"
+      - "-c"
+    args:
+      - 'apt-get update;
+      apt-get install -y --no-install-recommends -- ssh speedtest-cli netcat-openbsd curl wget ca-certificates jq less iproute2 iputils-ping vim bind9-dnsutils nginx;
+      mkdir -p -m0755 /run/sshd;
+      mkdir -m700 ~/.ssh;
+      echo "$SSH_PUBKEY" | tee ~/.ssh/authorized_keys;
+      chmod 0600 ~/.ssh/authorized_keys;
+      exec /usr/sbin/sshd -D'
+    expose:
+      - port: 80
+        as: 80
+        to:
+          - global: true
+      - port: 22
+        as: 22
+        to:
+          - global: true
+
+
+profiles:
+  compute:
+    app:
+      resources:
+        cpu:
+          units: 4
+        memory:
+          size: 8Gi
+        storage:
+          size: 20Gi
+  placement:
+    akash:
+      attributes:
+        host: akash
+        organization: ttoX
+      #signedBy:
+        #anyOf:
+          # - "akash1365yvmc4s7awdyj3n2sav7xfx76adc6dnmlx63"
+      pricing:
+        app:
+          denom: uakt
+          amount: 1000000
+          ## mainnet: Axelar USDC (uusdc)
+          #denom: ibc/170C677610AC31DF0904FFE09CD3B5C657492170E7E52372E48756B71E56F2F1
+          ## sandbox: Axelar USDC (uausdc)
+          ##denom: ibc/12C6A0C374171B595A0A9E18B83FA09D295FB1F2D8C6DAA3AC28683471752D84
+          #amount: 50000
+
+
+deployment:
+  app:
+    akash:
+      profile: app 
+      count: 1
