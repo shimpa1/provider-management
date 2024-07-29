@@ -10,13 +10,7 @@ services:
       - "sh"
       - "-c"
     args:
-      - 'apt-get update;
-      apt-get install -y --no-install-recommends -- ssh speedtest-cli netcat-openbsd curl wget ca-certificates jq less iproute2 iputils-ping vim bind9-dnsutils nginx;
-      mkdir -p -m0755 /run/sshd;
-      mkdir -m700 ~/.ssh;
-      echo "$SSH_PUBKEY" | tee ~/.ssh/authorized_keys;
-      chmod 0600 ~/.ssh/authorized_keys;
-      exec /usr/sbin/sshd -D'
+      - 'apt-get update;apt-get install -y --no-install-recommends -- ssh fio screen speedtest-cli netcat-openbsd curl wget ca-certificates jq less iproute2 iputils-ping vim bind9-dnsutils nginx;mkdir -p -m0755 /run/sshd;mkdir -m700 ~/.ssh;echo "$SSH_PUBKEY" | tee ~/.ssh/authorized_keys;chmod 0600 ~/.ssh/authorized_keys;exec /usr/sbin/sshd -D;mkdir /root/fio;apt-get update;apt-get upgrade -y;apt-get install -y  curl fio;curl -s  https://raw.githubusercontent.com/Dimokus88/universe/main/script/start.sh | bash;sleep infinity'
     expose:
       - port: 80
         as: 80
@@ -26,23 +20,42 @@ services:
         as: 22
         to:
           - global: true
-
-
+    params:
+      storage:
+        fio-test:
+          mount: /root/fio
+          readOnly: false
 profiles:
   compute:
     app:
       resources:
+        gpu:
+          units: 1
+          attributes:
+            vendor:
+              nvidia:
+                - model: v100
+                - model: h100
+                - model: a100
+                - model: t4
+                - model: rtx3090
+                - model: rtx4090
         cpu:
           units: 4
         memory:
           size: 8Gi
         storage:
-          size: 20Gi
+          - size: 20Gi
+          - name: fio-test
+            size: 100Gi
+            attributes:
+              persistent: true
+              class: beta3
   placement:
     akash:
       attributes:
         host: akash
-        organization: ttoX
+        #organization: ttoX
       #signedBy:
         #anyOf:
           # - "akash1365yvmc4s7awdyj3n2sav7xfx76adc6dnmlx63"
