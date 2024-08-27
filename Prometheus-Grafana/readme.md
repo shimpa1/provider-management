@@ -36,6 +36,7 @@ nano ~/provider/prometheus-values.yaml
 **
 
 echo -n 'adminuser' > ./admin-user # change your username
+
 echo -n 'p@ssword!' > ./admin-password # change your password
 
 kubectl create secret generic grafana-admin-credentials --from-file=./admin-user --from-file=admin-password -n monitoring
