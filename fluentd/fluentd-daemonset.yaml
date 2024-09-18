@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+  labels:
+    app: fluentd
+spec:
+  selector:
+    matchLabels:
+      app: fluentd
+  template:
+    metadata:
+      labels:
+        app: fluentd
+    spec:
+      containers:
+        - name: fluentd
+          image: fluent/fluentd-kubernetes-daemonset:v1.11.2-debian-loki-1.0
+          volumeMounts:
+            - name: config-volume        # Update the name here
+              mountPath: /fluentd/etc/fluent.conf
+              subPath: fluent.conf
+      volumes:
+        - name: config-volume            # Match the name with volumeMounts
+          configMap:
+            name: fluentd-config
