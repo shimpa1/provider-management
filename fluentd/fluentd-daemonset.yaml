@@ -13,14 +13,42 @@ spec:
       labels:
         app: fluentd
     spec:
-      containers:
-        - name: fluentd
-          image: fluent/fluentd-kubernetes-daemonset:v1.11.2-debian-loki-1.0
-          volumeMounts:
-            - name: config-volume        # Update the name here
-              mountPath: /fluentd/etc/fluent.conf
-              subPath: fluent.conf
+      # Define shared volumes
       volumes:
-        - name: config-volume            # Match the name with volumeMounts
+        - name: plugins
+          emptyDir: {}
+        - name: config-volume
           configMap:
             name: fluentd-config
+      # Define the initContainer to install plugins
+      initContainers:
+        - name: install-plugins
+          image: fluent/fluentd-kubernetes-daemonset:v1.16.5-debian-forward-amd64-1.0
+          command:
+            - sh
+            - -c
+            - |
+              # Install the required Fluentd plugins to /fluentd/plugins
+              gem install fluent-plugin-grafana-loki fluent-plugin-kubernetes_metadata_filter
+          # Set GEM_HOME to the shared plugins directory
+          env:
+            - name: GEM_HOME
+              value: /fluentd/plugins
+          volumeMounts:
+            - name: plugins
+              mountPath: /fluentd/plugins
+      # Define the main Fluentd container
+      containers:
+        - name: fluentd
+          image: fluent/fluentd-kubernetes-daemonset:v1.16.5-debian-forward-amd64-1.0
+          env:
+            # Include the shared plugins directory in GEM_PATH
+            - name: GEM_PATH
+              value: "/fluentd/plugins:/fluentd/vendor/bundle"
+          volumeMounts:
+            - name: plugins
+              mountPath: /fluentd/plugins
+            - name: config-volume
+              mountPath: /fluentd/etc/fluent.conf
+              subPath: fluent.conf
+      restartPolicy: Always
