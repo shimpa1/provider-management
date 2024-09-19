@@ -3,6 +3,7 @@ Fluentd daemonset for collecting logs from all pods in akash-services namespace.
 It will ship the logs to Loki.
 
 Pre-requisites: a running K8S cluster with Grafana running in monitoring namespace.
+
 To install:
 
 kubectl apply -f fluentd-clusterrole.yaml -n monitoring
