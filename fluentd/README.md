@@ -20,6 +20,8 @@ kubectl delete pod -l app=fluentd -n monitoring
 
 Install Loki:
 
+kubectl apply -f loki-configmap.yaml
+
 kubectl apply -f loki-nodeport-svc.yaml
 
 kubectl apply -f loki-manifests.yaml
