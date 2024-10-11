@@ -61,7 +61,7 @@ data:
 
     <match kubernetes.**>
       @type loki
-      url "http://100.69.175.78:31000"
+      url "<URL OR YOUR LOKI SERVER>"
       extract_kubernetes_labels true
       label_keys "namespace,pod,container"
       extra_labels {"collector":"fluentd"}
