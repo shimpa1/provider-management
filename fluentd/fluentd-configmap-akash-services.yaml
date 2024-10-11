@@ -10,8 +10,8 @@ data:
       @id in_tail_container_logs
       read_from_head true
       tag kubernetes.*
-      path /var/log/containers/*.log
-      pos_file /var/log/fluentd-containers.log.pos
+      path /var/log/containers/akash-provider-0_akash-services_*.log
+      pos_file /var/log/fluentd-akash-provider-0.log.pos
       exclude_path ["/var/log/containers/fluent*"]
       <parse>
         @type multi_format
