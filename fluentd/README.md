@@ -6,8 +6,6 @@ Pre-requisites: a running K8S cluster with Grafana running in monitoring namespa
 
 To install:
 
-helm upgrade loki grafana/loki-stack -f loki-values.yaml -n monitoring
-
 kubectl apply -f fluentd-clusterrole.yaml -n monitoring
 
 kubectl apply -f fluentd-clusterrolebinding.yaml -n monitoring
