@@ -61,12 +61,12 @@ data:
 
     <match kubernetes.**>
       @type loki
-      url "<URL OF YOUR LOKI SERVER>"
+      url "http://100.69.175.78:31000"
       extract_kubernetes_labels true
       label_keys "namespace,pod,container"
       extra_labels {"collector":"fluentd"}
       flush_interval 10s
-      flush_at_shutdown false
+      flush_at_shutdown true
       buffer_chunk_limit 1m
       line_format key_value
     </match>
