@@ -5,68 +5,114 @@ metadata:
   namespace: monitoring
 data:
   fluent.conf: |
+    <system>
+      log_level info
+    </system>
+
     <source>
       @type tail
-      @id in_tail_container_logs
-      read_from_head true
-      tag kubernetes.*
       path /var/log/containers/akash-provider-0_akash-services_*.log
       pos_file /var/log/fluentd-akash-provider-0.log.pos
-      exclude_path ["/var/log/containers/fluent*"]
+      read_from_head true
+      tag akash-provider
       <parse>
-        @type multi_format
-        <pattern>
-          format json
-          time_key time
-          time_type string
-          time_format "%Y-%m-%dT%H:%M:%S.%NZ"
-          keep_time_key false
-        </pattern>
-        <pattern>
-          format regexp
-          expression /^(?<time>.+) (?<stream>stdout|stderr)( (.))? (?<log>.*)$/
-          time_format '%Y-%m-%dT%H:%M:%S.%NZ'
-          keep_time_key false
-        </pattern>
+        @type none
       </parse>
-      emit_unmatched_lines true
     </source>
 
-    <match fluentd.**>
-      @type null
-    </match>
-
-    <match kubernetes.var.log.containers.**fluentd**.log>
-      @type null
-    </match>
-
-    <filter kubernetes.**>
-      @type kubernetes_metadata
-      @id filter_kube_metadata
-      kubernetes_url "#{'https://' + ENV.fetch('KUBERNETES_SERVICE_HOST') + ':' + ENV.fetch('KUBERNETES_SERVICE_PORT') + '/api'}"
-      verify_ssl "true"
-      ca_file "#{ENV['KUBERNETES_CA_FILE']}"
-    </filter>
-
-    <filter kubernetes.var.log.containers.**>
+    <filter **akash-provider**>
       @type record_transformer
-      enable_ruby
-      remove_keys kubernetes, docker
       <record>
-        namespace ${ record.dig("kubernetes", "namespace_name") }
-        pod ${ record.dig("kubernetes", "pod_name") }
-        container ${ record.dig("kubernetes", "container_name") }
+        cluster "europlots-sandbox"
+        pod "akash-provider-0"
       </record>
     </filter>
 
-    <match kubernetes.**>
+    <match **akash-provider**>
       @type loki
-      url "<URL OF YOUR LOKI SERVER>"
-      extract_kubernetes_labels true
-      label_keys "namespace,pod,container"
-      extra_labels {"collector":"fluentd"}
-      flush_interval 10s
-      flush_at_shutdown true
-      buffer_chunk_limit 1m
-      line_format key_value
+      url "http://100.69.175.78:31000"
+      extra_labels {"job":"fluentd"}
+      <label>
+        cluster ${record['cluster']}
+        pod ${record['pod']}
+      </label>
+      <buffer>
+        flush_interval 5s
+        chunk_limit_size 1m
+        retry_forever true
+        retry_max_interval 30
+        overflow_action block
+      </buffer>
+    </match>
+
+    <source>
+      @type tail
+      path /var/log/containers/operator-inventory*.log
+      pos_file /var/log/fluentd-operator-inventory.log.pos
+      read_from_head true
+      tag operator-inventory
+      <parse>
+        @type none
+      </parse>
+    </source>
+
+    <filter **operator-inventory**>
+      @type record_transformer
+      <record>
+        cluster "europlots-sandbox"
+        pod "operator-inventory"
+      </record>
+    </filter>
+
+    <match **operator-inventory**>
+      @type loki
+      url "http://100.69.175.78:31000"
+      extra_labels {"job":"fluentd"}
+      <label>
+        cluster ${record['cluster']}
+        pod ${record['pod']}
+      </label>
+      <buffer>
+        flush_interval 5s
+        chunk_limit_size 1m
+        retry_forever true
+        retry_max_interval 30
+        overflow_action block
+      </buffer>
+    </match>
+
+    <source>
+      @type tail
+      path /var/log/containers/operator-hostname*.log
+      pos_file /var/log/fluentd-operator-hostname.log.pos
+      read_from_head true
+      tag operator-hostname
+      <parse>
+        @type none
+      </parse>
+    </source>
+
+    <filter **operator-hostname**>
+      @type record_transformer
+      <record>
+        cluster "rtx4090-evergreen-akash-pub"
+        pod "operator-hostname"
+      </record>
+    </filter>
+
+    <match **operator-hostname**>
+      @type loki
+      url "http://100.69.175.78:31000"
+      extra_labels {"job":"fluentd"}
+      <label>
+        cluster ${record['cluster']}
+        pod ${record['pod']}
+      </label>
+      <buffer>
+        flush_interval 5s
+        chunk_limit_size 1m
+        retry_forever true
+        retry_max_interval 30
+        overflow_action block
+      </buffer>
     </match>
