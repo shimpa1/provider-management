@@ -95,7 +95,7 @@ data:
     <filter **operator-hostname**>
       @type record_transformer
       <record>
-        cluster "rtx4090-evergreen-akash-pub"
+        cluster "europlots-sandbox"
         pod "operator-hostname"
       </record>
     </filter>
