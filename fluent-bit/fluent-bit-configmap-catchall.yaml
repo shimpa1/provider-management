@@ -37,8 +37,8 @@ data:
     [OUTPUT]
         Name        loki
         Match       *
-        Host        loki.euro-ai.net
-        Port        31000
+        Host        <host> ### ENTER HOSTNAME OR IP ADDRESS OF LOKI SERVER
+        Port        3100
         Remove_Keys kubernetes
         Line_Format json
         Labels      job=fluentbit,namespace=$kubernetes['namespace_name'],pod_name=$kubernetes['pod_name']
