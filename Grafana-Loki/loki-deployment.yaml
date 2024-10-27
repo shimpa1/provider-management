@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: <hostname of the physical node that will host the persistent volume>
+      securityContext:
+        fsGroup: 10001
+      initContainers:
+        - name: init-chown-data
+          image: busybox:1.34
+          command: ["sh", "-c", "chown -R 10001:10001 /loki"]
+          volumeMounts:
+            - name: loki-storage
+              mountPath: /loki
+          securityContext:
+            runAsUser: 10001
+            runAsGroup: 10001
+      containers:
+        - name: loki
+          image: grafana/loki:latest
+          ports:
+            - name: http-metrics
+              containerPort: 3100
+          securityContext:
+            runAsUser: 10001
+            runAsGroup: 10001
+          args:
+            - -config.file=/etc/loki/local-config.yaml
+          volumeMounts:
+            - name: config
+              mountPath: /etc/loki
+            - name: loki-storage
+              mountPath: /loki
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http-metrics
+            initialDelaySeconds: 45
+            timeoutSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: http-metrics
+            initialDelaySeconds: 45
+      volumes:
+        - name: config
+          configMap:
+            name: loki-config
+        - name: loki-storage
+          persistentVolumeClaim:
+            claimName: loki-pvc
