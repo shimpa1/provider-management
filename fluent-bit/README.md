@@ -2,3 +2,6 @@ A fluent-bit daemonset + configmap for any kubernetes cluster to gather, process
 
 CATCHALL:
 Will catch all logs produced in a K8S or K3S environment and ship them to Loki with the appropriate labels extracted from kubernetes metadata. An additional static label is called CLUSTER_NAME - make sure you update this with your own value.
+
+AKASH-SERVICES:
+Will catch logs only from akash-services namespace, label them and ship to Loki.
