@@ -4,6 +4,6 @@ Make sure to update the CLUSTER_NAME to match your own value.
 
 Also make sure to update the name of the physical node that will host the persistent volume. On that specific node, make sure the directory exists:
 
-sudo mkdir -p /mnt/data/loki
+mkdir -p /mnt/data/loki
 
-sudo chmod 777 /mnt/data/loki
+chmod 777 /mnt/data/loki
