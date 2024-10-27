@@ -1,0 +1,190 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: monitoring
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush 1
+        Daemon off
+        Log_Level info
+        Parsers_File parsers.conf
+
+    # akash-provider
+    [INPUT]
+        Name tail
+        Tag akash.provider
+        Path /var/log/containers/akash-provider-0_*.log
+        Parser docker
+        Refresh_Interval 10
+        Mem_Buf_Limit 5MB
+        Skip_Long_Lines on
+
+    [FILTER]
+        Name kubernetes
+        Match akash.provider
+        Merge_Log on
+        Keep_Log off
+        K8S-Logging.Parser on
+        K8S-Logging.Exclude off
+
+    [FILTER]
+        Name modify
+        Match akash.provider
+        Add cluster_name $CLUSTER_NAME
+        Add container_name akash-provider-0
+
+    [OUTPUT]
+        Name loki
+        Match akash.provider
+        Host 100.70.2.34
+        Port 32100
+        Labels cluster_name=$CLUSTER_NAME,container_name=akash-provider-0
+        Label_Keys $cluster_name,$container_name
+        Line_Format json
+        Auto_Kubernetes_Labels false
+
+    # operator-hostname
+    [INPUT]
+        Name tail
+        Tag operator.hostname
+        Path /var/log/containers/operator-hostname-*.log
+        Parser docker
+        Refresh_Interval 10
+        Mem_Buf_Limit 5MB
+        Skip_Long_Lines on
+
+    [FILTER]
+        Name kubernetes
+        Match operator.hostname
+        Merge_Log on
+        Keep_Log off
+        K8S-Logging.Parser on
+        K8S-Logging.Exclude off
+
+    [FILTER]
+        Name modify
+        Match operator.hostname
+        Add cluster_name $CLUSTER_NAME
+        Add container_name operator-hostname
+
+    [OUTPUT]
+        Name loki
+        Match operator.hostname
+        Host 100.70.2.34
+        Port 32100
+        Labels cluster_name=$CLUSTER_NAME,container_name=operator-hostname
+        Label_Keys $cluster_name,$container_name
+        Line_Format json
+        Auto_Kubernetes_Labels false
+
+    # operator-inventory
+    [INPUT]
+        Name tail
+        Tag operator.inventory
+        Path /var/log/containers/operator-inventory-*.log
+        Parser docker
+        Refresh_Interval 10
+        Mem_Buf_Limit 5MB
+        Skip_Long_Lines on
+
+    [FILTER]
+        Name kubernetes
+        Match operator.inventory
+        Merge_Log on
+        Keep_Log off
+        K8S-Logging.Parser on
+        K8S-Logging.Exclude off
+
+    [FILTER]
+        Name modify
+        Match operator.inventory
+        Add cluster_name $CLUSTER_NAME
+        Add container_name operator-inventory
+
+    [OUTPUT]
+        Name loki
+        Match operator.inventory
+        Host 100.70.2.34
+        Port 32100
+        Labels cluster_name=$CLUSTER_NAME,container_name=operator-inventory
+        Label_Keys $cluster_name,$container_name
+        Line_Format json
+        Auto_Kubernetes_Labels false
+
+    # operator-inventory-hardware-discovery
+    [INPUT]
+        Name tail
+        Tag operator.inventory.hardware
+        Path /var/log/containers/operator-inventory-hardware-discovery-*.log
+        Parser docker
+        Refresh_Interval 10
+        Mem_Buf_Limit 5MB
+        Skip_Long_Lines on
+
+    [FILTER]
+        Name kubernetes
+        Match operator.inventory.hardware
+        Merge_Log on
+        Keep_Log off
+        K8S-Logging.Parser on
+        K8S-Logging.Exclude off
+
+    [FILTER]
+        Name modify
+        Match operator.inventory.hardware
+        Add cluster_name $CLUSTER_NAME
+        Add container_name operator-inventory-hardware-discovery
+
+    [OUTPUT]
+        Name loki
+        Match operator.inventory.hardware
+        Host 100.70.2.34
+        Port 32100
+        Labels cluster_name=$CLUSTER_NAME,container_name=operator-inventory-hardware-discovery
+        Label_Keys $cluster_name,$container_name
+        Line_Format json
+        Auto_Kubernetes_Labels false
+
+    # operator-ip
+    [INPUT]
+        Name tail
+        Tag operator.ip
+        Path /var/log/containers/operator-ip-*.log
+        Parser docker
+        Refresh_Interval 10
+        Mem_Buf_Limit 5MB
+        Skip_Long_Lines on
+
+    [FILTER]
+        Name kubernetes
+        Match operator.ip
+        Merge_Log on
+        Keep_Log off
+        K8S-Logging.Parser on
+        K8S-Logging.Exclude off
+
+    [FILTER]
+        Name modify
+        Match operator.ip
+        Add cluster_name $CLUSTER_NAME
+        Add container_name operator-ip
+
+    [OUTPUT]
+        Name loki
+        Match operator.ip
+        Host 100.70.2.34
+        Port 32100
+        Labels cluster_name=$CLUSTER_NAME,container_name=operator-ip
+        Label_Keys $cluster_name,$container_name
+        Line_Format json
+        Auto_Kubernetes_Labels false
+
+  parsers.conf: |
+    [PARSER]
+        Name docker
+        Format json
+        Time_Key time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+        Time_Keep On
