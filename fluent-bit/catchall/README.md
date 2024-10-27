@@ -13,5 +13,7 @@ cat << EOF > fluent-bit-configmap-akash-services.yaml  EOF
 Order of applying:
 
 kubectl apply -f fluent-bit-service-account-rbac.yaml
+
 kubectl apply -f fluent-bit-configmap-catchall.yaml
+
 kubectl apply -f fluent-bit-daemonset.yaml
