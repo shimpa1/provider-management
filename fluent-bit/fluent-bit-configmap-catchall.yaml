@@ -6,186 +6,47 @@ metadata:
 data:
   fluent-bit.conf: |
     [SERVICE]
-        Flush 1
-        Daemon off
-        Log_Level info
-        Parsers_File parsers.conf
+        Flush         1
+        Log_Level     info
+        Daemon        off
+        Parsers_File  parsers.conf
+        HTTP_Server   On
+        HTTP_Listen   0.0.0.0
+        HTTP_Port     2020
 
-    # akash-provider
     [INPUT]
-        Name tail
-        Tag akash.provider
-        Path /var/log/containers/akash-provider-0_*.log
-        Parser docker
-        Refresh_Interval 10
-        Mem_Buf_Limit 5MB
-        Skip_Long_Lines on
+        Name              tail
+        Tag               kube.*
+        Path              /var/log/containers/*.log
+        Parser            docker
+        DB                /var/log/flb_kube.db
+        Mem_Buf_Limit     5MB
+        Skip_Long_Lines   On
+        Refresh_Interval  10
 
     [FILTER]
-        Name kubernetes
-        Match akash.provider
-        Merge_Log on
-        Keep_Log off
-        K8S-Logging.Parser on
-        K8S-Logging.Exclude off
-
-    [FILTER]
-        Name modify
-        Match akash.provider
-        Add cluster_name ${CLUSTER_NAME}
-        Add container_name akash-provider-0
+        Name                kubernetes
+        Match               kube.*
+        Kube_URL           https://kubernetes.default.svc:443
+        Kube_CA_File       /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File    /var/run/secrets/kubernetes.io/serviceaccount/token
+        Kube_Tag_Prefix    kube.var.log.containers.
+        Merge_Log          On
+        K8S-Logging.Parser On
 
     [OUTPUT]
-        Name loki
-        Match akash.provider
-        Host <host> ##### enter the hostname or IP address of Loki server
-        Port 3100
-        Labels cluster_name=${CLUSTER_NAME},container_name=akash-provider-0
-        Label_Keys $cluster_name,$container_name
+        Name        loki
+        Match       *
+        Host        loki.euro-ai.net
+        Port        31000
+        Remove_Keys kubernetes
         Line_Format json
-        Auto_Kubernetes_Labels false
-
-    # operator-hostname
-    [INPUT]
-        Name tail
-        Tag operator.hostname
-        Path /var/log/containers/operator-hostname-*.log
-        Parser docker
-        Refresh_Interval 10
-        Mem_Buf_Limit 5MB
-        Skip_Long_Lines on
-
-    [FILTER]
-        Name kubernetes
-        Match operator.hostname
-        Merge_Log on
-        Keep_Log off
-        K8S-Logging.Parser on
-        K8S-Logging.Exclude off
-
-    [FILTER]
-        Name modify
-        Match operator.hostname
-        Add cluster_name ${CLUSTER_NAME}
-        Add container_name operator-hostname
-
-    [OUTPUT]
-        Name loki
-        Match operator.hostname
-        Host <host> ##### enter the hostname or IP address of Loki server
-        Port 3100
-        Labels cluster_name=${CLUSTER_NAME},container_name=operator-hostname
-        Label_Keys $cluster_name,$container_name
-        Line_Format json
-        Auto_Kubernetes_Labels false
-
-    # operator-inventory
-    [INPUT]
-        Name tail
-        Tag operator.inventory
-        Path /var/log/containers/operator-inventory-*.log
-        Parser docker
-        Refresh_Interval 10
-        Mem_Buf_Limit 5MB
-        Skip_Long_Lines on
-
-    [FILTER]
-        Name kubernetes
-        Match operator.inventory
-        Merge_Log on
-        Keep_Log off
-        K8S-Logging.Parser on
-        K8S-Logging.Exclude off
-
-    [FILTER]
-        Name modify
-        Match operator.inventory
-        Add cluster_name ${CLUSTER_NAME}
-        Add container_name operator-inventory
-
-    [OUTPUT]
-        Name loki
-        Match operator.inventory
-        Host <host> ##### enter the hostname or IP address of Loki server
-        Port 3100
-        Labels cluster_name=${CLUSTER_NAME},container_name=operator-inventory
-        Label_Keys $cluster_name,$container_name
-        Line_Format json
-        Auto_Kubernetes_Labels false
-
-    # operator-inventory-hardware-discovery
-    [INPUT]
-        Name tail
-        Tag operator.inventory.hardware
-        Path /var/log/containers/operator-inventory-hardware-discovery-*.log
-        Parser docker
-        Refresh_Interval 10
-        Mem_Buf_Limit 5MB
-        Skip_Long_Lines on
-
-    [FILTER]
-        Name kubernetes
-        Match operator.inventory.hardware
-        Merge_Log on
-        Keep_Log off
-        K8S-Logging.Parser on
-        K8S-Logging.Exclude off
-
-    [FILTER]
-        Name modify
-        Match operator.inventory.hardware
-        Add cluster_name ${CLUSTER_NAME}
-        Add container_name operator-inventory-hardware-discovery
-
-    [OUTPUT]
-        Name loki
-        Match operator.inventory.hardware
-        Host <host> ##### enter the hostname or IP address of Loki server
-        Port 3100
-        Labels cluster_name=${CLUSTER_NAME},container_name=operator-inventory-hardware-discovery
-        Label_Keys $cluster_name,$container_name
-        Line_Format json
-        Auto_Kubernetes_Labels false
-
-    # operator-ip
-    [INPUT]
-        Name tail
-        Tag operator.ip
-        Path /var/log/containers/operator-ip-*.log
-        Parser docker
-        Refresh_Interval 10
-        Mem_Buf_Limit 5MB
-        Skip_Long_Lines on
-
-    [FILTER]
-        Name kubernetes
-        Match operator.ip
-        Merge_Log on
-        Keep_Log off
-        K8S-Logging.Parser on
-        K8S-Logging.Exclude off
-
-    [FILTER]
-        Name modify
-        Match operator.ip
-        Add cluster_name ${CLUSTER_NAME}
-        Add container_name operator-ip
-
-    [OUTPUT]
-        Name loki
-        Match operator.ip
-        Host <host> ##### enter the hostname or IP address of Loki server
-        Port 3100
-        Labels cluster_name=${CLUSTER_NAME},container_name=operator-ip
-        Label_Keys $cluster_name,$container_name
-        Line_Format json
-        Auto_Kubernetes_Labels false
+        Labels      job=fluentbit,namespace=$kubernetes['namespace_name'],pod_name=$kubernetes['pod_name']
 
   parsers.conf: |
     [PARSER]
-        Name docker
-        Format json
-        Time_Key time
+        Name        docker
+        Format      json
+        Time_Key    time
         Time_Format %Y-%m-%dT%H:%M:%S.%L
-        Time_Keep On
-EOF
+        Time_Keep   On
