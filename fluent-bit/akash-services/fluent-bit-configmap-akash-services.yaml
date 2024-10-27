@@ -14,7 +14,7 @@ data:
     # akash-provider
     [INPUT]
         Name tail
-        Tag akash.provider
+        Tag kube.var.log.containers.akash-provider
         Path /var/log/containers/akash-provider-0_*.log
         Parser docker
         Refresh_Interval 10
@@ -23,7 +23,7 @@ data:
 
     [FILTER]
         Name kubernetes
-        Match akash.provider
+        Match kube.var.log.containers.akash-provider*
         Merge_Log on
         Keep_Log off
         K8S-Logging.Parser on
@@ -31,13 +31,13 @@ data:
 
     [FILTER]
         Name modify
-        Match akash.provider
+        Match kube.var.log.containers.akash-provider*
         Add cluster_name $CLUSTER_NAME
         Add container_name akash-provider-0
 
     [OUTPUT]
         Name loki
-        Match akash.provider
+        Match kube.var.log.containers.akash-provider*
         Host 100.70.2.34
         Port 32100
         Labels cluster_name=$CLUSTER_NAME,container_name=akash-provider-0
@@ -48,7 +48,7 @@ data:
     # operator-hostname
     [INPUT]
         Name tail
-        Tag operator.hostname
+        Tag kube.var.log.containers.operator-hostname
         Path /var/log/containers/operator-hostname-*.log
         Parser docker
         Refresh_Interval 10
@@ -57,7 +57,7 @@ data:
 
     [FILTER]
         Name kubernetes
-        Match operator.hostname
+        Match kube.var.log.containers.operator-hostname*
         Merge_Log on
         Keep_Log off
         K8S-Logging.Parser on
@@ -65,13 +65,13 @@ data:
 
     [FILTER]
         Name modify
-        Match operator.hostname
+        Match kube.var.log.containers.operator-hostname*
         Add cluster_name $CLUSTER_NAME
         Add container_name operator-hostname
 
     [OUTPUT]
         Name loki
-        Match operator.hostname
+        Match kube.var.log.containers.operator-hostname*
         Host 100.70.2.34
         Port 32100
         Labels cluster_name=$CLUSTER_NAME,container_name=operator-hostname
@@ -82,7 +82,7 @@ data:
     # operator-inventory
     [INPUT]
         Name tail
-        Tag operator.inventory
+        Tag kube.var.log.containers.operator-inventory
         Path /var/log/containers/operator-inventory-*.log
         Parser docker
         Refresh_Interval 10
@@ -91,7 +91,7 @@ data:
 
     [FILTER]
         Name kubernetes
-        Match operator.inventory
+        Match kube.var.log.containers.operator-inventory*
         Merge_Log on
         Keep_Log off
         K8S-Logging.Parser on
@@ -99,13 +99,13 @@ data:
 
     [FILTER]
         Name modify
-        Match operator.inventory
+        Match kube.var.log.containers.operator-inventory*
         Add cluster_name $CLUSTER_NAME
         Add container_name operator-inventory
 
     [OUTPUT]
         Name loki
-        Match operator.inventory
+        Match kube.var.log.containers.operator-inventory*
         Host 100.70.2.34
         Port 32100
         Labels cluster_name=$CLUSTER_NAME,container_name=operator-inventory
@@ -116,7 +116,7 @@ data:
     # operator-inventory-hardware-discovery
     [INPUT]
         Name tail
-        Tag operator.inventory.hardware
+        Tag kube.var.log.containers.operator-inventory-hardware
         Path /var/log/containers/operator-inventory-hardware-discovery-*.log
         Parser docker
         Refresh_Interval 10
@@ -125,7 +125,7 @@ data:
 
     [FILTER]
         Name kubernetes
-        Match operator.inventory.hardware
+        Match kube.var.log.containers.operator-inventory-hardware*
         Merge_Log on
         Keep_Log off
         K8S-Logging.Parser on
@@ -133,13 +133,13 @@ data:
 
     [FILTER]
         Name modify
-        Match operator.inventory.hardware
+        Match kube.var.log.containers.operator-inventory-hardware*
         Add cluster_name $CLUSTER_NAME
         Add container_name operator-inventory-hardware-discovery
 
     [OUTPUT]
         Name loki
-        Match operator.inventory.hardware
+        Match kube.var.log.containers.operator-inventory-hardware*
         Host 100.70.2.34
         Port 32100
         Labels cluster_name=$CLUSTER_NAME,container_name=operator-inventory-hardware-discovery
@@ -150,7 +150,7 @@ data:
     # operator-ip
     [INPUT]
         Name tail
-        Tag operator.ip
+        Tag kube.var.log.containers.operator-ip
         Path /var/log/containers/operator-ip-*.log
         Parser docker
         Refresh_Interval 10
@@ -159,7 +159,7 @@ data:
 
     [FILTER]
         Name kubernetes
-        Match operator.ip
+        Match kube.var.log.containers.operator-ip*
         Merge_Log on
         Keep_Log off
         K8S-Logging.Parser on
@@ -167,13 +167,13 @@ data:
 
     [FILTER]
         Name modify
-        Match operator.ip
+        Match kube.var.log.containers.operator-ip*
         Add cluster_name $CLUSTER_NAME
         Add container_name operator-ip
 
     [OUTPUT]
         Name loki
-        Match operator.ip
+        Match kube.var.log.containers.operator-ip*
         Host 100.70.2.34
         Port 32100
         Labels cluster_name=$CLUSTER_NAME,container_name=operator-ip
