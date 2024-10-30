@@ -36,6 +36,12 @@ alertmanager:
     enabled: false
 
 grafana:
+  dashboards:
+    default:
+      node-exporter-full:
+        # Disable the Node Exporter / MacOS dashboard
+        darwin-node-exporter:
+          disable: true
   enabled: true
     ingress:
     enabled: true
