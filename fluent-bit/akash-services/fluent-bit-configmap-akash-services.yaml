@@ -14,7 +14,7 @@ data:
     # akash-provider
     [INPUT]
         Name tail
-        Tag kube.var.log.containers.akash-provider
+        Tag kube.var.log.containers.akash-provider*
         Path /var/log/containers/akash-provider-0_*.log
         Parser docker
         Refresh_Interval 10
@@ -44,7 +44,6 @@ data:
         Label_Keys $cluster_name,$container_name
         Line_Format json
         Auto_Kubernetes_Labels false
-
     # operator-hostname
     [INPUT]
         Name tail
@@ -82,7 +81,7 @@ data:
     # operator-inventory
     [INPUT]
         Name tail
-        Tag kube.var.log.containers.operator-inventory
+        Tag kube.var.log.containers.operator-inventory*
         Path /var/log/containers/operator-inventory-*.log
         Parser docker
         Refresh_Interval 10
