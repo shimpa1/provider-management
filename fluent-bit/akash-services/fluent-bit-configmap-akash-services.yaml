@@ -181,6 +181,34 @@ data:
         Line_Format json
         Auto_Kubernetes_Labels false
 
+    # Kubernetes Events Input
+    [INPUT]
+        Name              kubernetes_events
+        Tag               kube.events
+        Interval_Sec      1
+        Kube_URL         https://kubernetes.default.svc:443
+        Kube_CA_File     /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File  /var/run/secrets/kubernetes.io/serviceaccount/token
+        Kube_Token_TTL   600
+
+    # Filter for Kubernetes Events
+    [FILTER]
+        Name          modify
+        Match         kube.events
+        Add          cluster_name h100-mon-obl-akash-pub
+        Add          log_type    k8s_events
+
+    # Output for Kubernetes Events
+    [OUTPUT]
+        Name          loki
+        Match         kube.events
+        Host          100.70.2.34
+        Port          32100
+        Labels        cluster_name=h100-mon-obl-akash-pub,log_type=k8s_events
+        Label_Keys    $cluster_name,$log_type
+        Line_Format   json
+        Auto_Kubernetes_Labels false
+
   parsers.conf: |
     [PARSER]
         Name docker
