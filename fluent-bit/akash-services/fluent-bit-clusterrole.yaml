@@ -3,9 +3,17 @@ kind: ClusterRole
 metadata:
   name: fluent-bit-role
 rules:
-- apiGroups: [""]
-  resources:
-    - namespaces
-    - pods
-    - events
-  verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - namespaces
+      - pods
+      - events
+    verbs: ["get", "list", "watch"]
+  - apiGroups: 
+      - "apps"
+      - "batch"
+      - "autoscaling"
+      - "networking.k8s.io"
+      - "storage.k8s.io"
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
