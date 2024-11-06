@@ -1,19 +1,90 @@
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: fluent-bit-role
 rules:
+  # Core API group
   - apiGroups: [""]
     resources:
       - namespaces
       - pods
       - events
+      - nodes
+      - services
+      - configmaps
+      - secrets
+      - persistentvolumes
+      - persistentvolumeclaims
+      - replicationcontrollers
+      - limitranges
+      - resourcequotas
+      - serviceaccounts
+      - endpoints
     verbs: ["get", "list", "watch"]
-  - apiGroups: 
-      - "apps"
-      - "batch"
-      - "autoscaling"
-      - "networking.k8s.io"
-      - "storage.k8s.io"
-    resources: ["*"]
+
+  # Apps API group
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - daemonsets
+      - replicasets
+      - statefulsets
+    verbs: ["get", "list", "watch"]
+
+  # Batch API group
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+      - cronjobs
+    verbs: ["get", "list", "watch"]
+
+  # Autoscaling API group
+  - apiGroups: ["autoscaling"]
+    resources:
+      - horizontalpodautoscalers
+    verbs: ["get", "list", "watch"]
+
+  # Networking API group
+  - apiGroups: ["networking.k8s.io"]
+    resources:
+      - networkpolicies
+      - ingresses
+      - ingressclasses
+    verbs: ["get", "list", "watch"]
+
+  # Storage API group
+  - apiGroups: ["storage.k8s.io"]
+    resources:
+      - storageclasses
+      - volumeattachments
+      - csinodes
+    verbs: ["get", "list", "watch"]
+
+  # Policy API group
+  - apiGroups: ["policy"]
+    resources:
+      - poddisruptionbudgets
+      - podsecuritypolicies
+    verbs: ["get", "list", "watch"]
+
+  # RBAC API group
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources:
+      - roles
+      - rolebindings
+      - clusterroles
+      - clusterrolebindings
+    verbs: ["get", "list", "watch"]
+
+  # Certificates API group
+  - apiGroups: ["certificates.k8s.io"]
+    resources:
+      - certificatesigningrequests
+    verbs: ["get", "list", "watch"]
+
+  # Custom Resource Definitions
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources:
+      - customresourcedefinitions
     verbs: ["get", "list", "watch"]
