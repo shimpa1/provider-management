@@ -5,11 +5,15 @@ Make sure to update the CLUSTER_NAME to match your own value in files `fluent-bi
 `kubectl -n monitoring create job fluent-bit-init --image=busybox -- /bin/sh -c "mkdir -p /var/lib/fluent-bit"`
 
 `kubectl apply -f fluent-bit-service-acct.yaml`
+
 `kubectl apply -f fluent-bit-clusterrole.yaml`
+
 `kubectl apply -f fluent-bit-clusterrole-binding.yaml`
 
 Then, depending on your architecture use either the K8S or the K3S configmap:
+
 `kubectl apply -f fluent-bit-configmap-akash-services-k8s.yaml`
 
 And last, apply the daemonset:
+
 `kubectl apply -f fluent-bit-daemonset-akash-services.yaml`
