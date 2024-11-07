@@ -1,6 +1,6 @@
 A fluent-bit configmap, daemonset and all the relevant config files designed to catch, label and ship logs and events from akash-services namespace to a Loki instance.
 
-Make sure to update the CLUSTER_NAME to match your own value in files `fluent-bit-configmap-akash-services-k8s.yaml` and `fluent-bit-daemonset-akash-services.yaml`
+Make sure to update the CLUSTER_NAME to match your own value in file `fluent-bit-daemonset-akash-services.yaml`
 
 `kubectl -n monitoring create job fluent-bit-init --image=busybox -- /bin/sh -c "mkdir -p /var/lib/fluent-bit"`
 
