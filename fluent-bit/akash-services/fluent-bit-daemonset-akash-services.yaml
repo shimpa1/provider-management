@@ -1,4 +1,3 @@
----
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -18,10 +17,11 @@ spec:
       serviceAccountName: fluent-bit
       containers:
       - name: fluent-bit
-        image: fluent/fluent-bit:2.1
+        image: fluent/fluent-bit:2.1.10  # Updated to latest stable version
+        imagePullPolicy: IfNotPresent
         env:
         - name: CLUSTER_NAME
-          value: "REPLACE_WITH_CLUSTER_NAME"  # Replace this with your cluster identifier
+          value: ""  # MODIFY WITH YOUR CLUSTER NAME
         volumeMounts:
         - name: varlog
           mountPath: /var/log
@@ -30,8 +30,24 @@ spec:
           readOnly: true
         - name: fluent-bit-config
           mountPath: /fluent-bit/etc/
+        - name: fluent-bit-state
+          mountPath: /fluent-bit/state
         ports:
         - containerPort: 2020
+          name: metrics
+        resources:
+          limits:
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
       volumes:
       - name: varlog
         hostPath:
@@ -42,3 +58,7 @@ spec:
       - name: fluent-bit-config
         configMap:
           name: fluent-bit-config
+      - name: fluent-bit-state
+        hostPath:
+          path: /var/lib/fluent-bit
+          type: DirectoryOrCreate
