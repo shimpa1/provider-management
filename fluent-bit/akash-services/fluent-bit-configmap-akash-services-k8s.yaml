@@ -194,7 +194,7 @@ data:
     [FILTER]
         Name          modify
         Match         kube.events
-        Add          cluster_name hurricane-akash-pub
+        Add          cluster_name $CLUSTER_NAME
         Add          container_name k8s-events
 
     [OUTPUT]
@@ -202,18 +202,10 @@ data:
         Match         kube.events
         Host          100.70.2.34
         Port          32100
-        Labels        cluster_name=hurricane-akash-pub,container_name=k8s-events
+        Labels        cluster_name=$CLUSTER_NAME,container_name=k8s-events
         Label_Keys    $cluster_name,$container_name
         Line_Format   json
         Auto_Kubernetes_Labels false
-
-  parsers.conf: |
-    [PARSER]
-        Name docker
-        Format json
-        Time_Key time
-        Time_Format %Y-%m-%dT%H:%M:%S.%L
-        Time_Keep On
 
   parsers.conf: |
     [PARSER]
