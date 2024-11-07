@@ -17,3 +17,6 @@ Then, depending on your architecture use either the K8S or the K3S configmap:
 And last, apply the daemonset:
 
 `kubectl apply -f fluent-bit-daemonset-akash-services.yaml`
+
+Watch the reload process:
+`kubectl -n monitoring rollout status ds/fluent-bit` 
