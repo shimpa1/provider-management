@@ -8,6 +8,6 @@ Grafana-Loki repo is for private deployments where neither Grafana nor Loki requ
 
 Prometheus-Grafana repo is for public environments. It is used for creation of a Kubernetes monitoring system based on Prometheus which is collecting data and Grafana for displaying. A number of dashboards will already be created by default.
 
-Fluent-bit repo is for fluent-bit log collection, specifically optimized for Akash Providers. It will catch all pod logs running in a K8S or K3S system and ship them to Loki. Soon to be added a configmap that will only capture logs from akash-services namespace.
+Fluent-bit repo is for fluent-bit log collection, specifically optimized for Akash Providers. The akash-services section is for capturing akash-services namespace pod logs only and the catchall section holds config files that will catch all pod logs running in a K8S or K3S system. Both systems ship logs to Loki. 
 
 Fluentd repo is outdated and will not receive any further updates.
