@@ -195,15 +195,15 @@ data:
         Name          modify
         Match         kube.events
         Add          cluster_name $CLUSTER_NAME
-        Add          container_name k8s-events
+        Add          log_type kubernetes_events
 
     [OUTPUT]
         Name          loki
         Match         kube.events
         Host          100.70.2.34
         Port          32100
-        Labels        cluster_name=$CLUSTER_NAME,container_name=k8s-events
-        Label_Keys    $cluster_name,$container_name
+        Labels        cluster_name=$CLUSTER_NAME,log_type=kubernetes_events
+        Label_Keys    $cluster_name,$log_type
         Line_Format   json
         Auto_Kubernetes_Labels false
 
