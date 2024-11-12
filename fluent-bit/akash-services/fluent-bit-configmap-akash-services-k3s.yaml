@@ -11,35 +11,34 @@ data:
         Log_Level info
         Parsers_File parsers.conf
 
+    # Common Kubernetes Filter for Container Logs
+    [FILTER]
+        Name kubernetes
+        Match kube.var.log.containers.*
+        Merge_Log on
+        Keep_Log off
+        K8S-Logging.Parser on
+        K8S-Logging.Exclude off
+
     # akash-provider
     [INPUT]
         Name tail
-        Tag kube.akash-provider
-        Path /var/log/containers/akash-provider-0_*.log
+        Tag kube.var.log.containers.akash-provider*
+        Path /var/log/containers/akash-provider-*.log
         Parser docker
         Refresh_Interval 10
         Mem_Buf_Limit 5MB
         Skip_Long_Lines on
 
     [FILTER]
-        Name kubernetes
-        Match kube.akash-provider
-        Merge_Log on
-        Keep_Log off
-        K8S-Logging.Parser on
-        K8S-Logging.Exclude off
-        Use_Kubelet off
-        Regex_Parser k8s-container
-
-    [FILTER]
         Name modify
-        Match kube.akash-provider
+        Match kube.var.log.containers.akash-provider*
         Add cluster_name $CLUSTER_NAME
         Add container_name akash-provider-0
 
     [OUTPUT]
         Name loki
-        Match kube.akash-provider
+        Match kube.var.log.containers.akash-provider*
         Host 100.70.2.34
         Port 32100
         Labels cluster_name=$CLUSTER_NAME,container_name=akash-provider-0
@@ -50,7 +49,7 @@ data:
     # operator-hostname
     [INPUT]
         Name tail
-        Tag kube.operator-hostname
+        Tag kube.var.log.containers.operator-hostname*
         Path /var/log/containers/operator-hostname-*.log
         Parser docker
         Refresh_Interval 10
@@ -58,24 +57,14 @@ data:
         Skip_Long_Lines on
 
     [FILTER]
-        Name kubernetes
-        Match kube.operator-hostname
-        Merge_Log on
-        Keep_Log off
-        K8S-Logging.Parser on
-        K8S-Logging.Exclude off
-        Use_Kubelet off
-        Regex_Parser k8s-container
-
-    [FILTER]
         Name modify
-        Match kube.operator-hostname
+        Match kube.var.log.containers.operator-hostname*
         Add cluster_name $CLUSTER_NAME
         Add container_name operator-hostname
 
     [OUTPUT]
         Name loki
-        Match kube.operator-hostname
+        Match kube.var.log.containers.operator-hostname*
         Host 100.70.2.34
         Port 32100
         Labels cluster_name=$CLUSTER_NAME,container_name=operator-hostname
@@ -86,32 +75,22 @@ data:
     # operator-inventory
     [INPUT]
         Name tail
-        Tag kube.operator-inventory
-        Path /var/log/containers/operator-inventory-[^h]*.log
+        Tag kube.var.log.containers.operator-inventory*
+        Path /var/log/containers/operator-inventory-*.log
         Parser docker
         Refresh_Interval 10
         Mem_Buf_Limit 5MB
         Skip_Long_Lines on
 
     [FILTER]
-        Name kubernetes
-        Match kube.operator-inventory
-        Merge_Log on
-        Keep_Log off
-        K8S-Logging.Parser on
-        K8S-Logging.Exclude off
-        Use_Kubelet off
-        Regex_Parser k8s-container
-
-    [FILTER]
         Name modify
-        Match kube.operator-inventory
+        Match kube.var.log.containers.operator-inventory*
         Add cluster_name $CLUSTER_NAME
         Add container_name operator-inventory
 
     [OUTPUT]
         Name loki
-        Match kube.operator-inventory
+        Match kube.var.log.containers.operator-inventory*
         Host 100.70.2.34
         Port 32100
         Labels cluster_name=$CLUSTER_NAME,container_name=operator-inventory
@@ -122,32 +101,22 @@ data:
     # operator-inventory-hardware-discovery
     [INPUT]
         Name tail
-        Tag kube.operator-inventory-hardware
-        Path /var/log/containers/operator-inventory-hardware-*.log
+        Tag kube.var.log.containers.operator-inventory-hardware*
+        Path /var/log/containers/operator-inventory-hardware-discovery-*.log
         Parser docker
         Refresh_Interval 10
         Mem_Buf_Limit 5MB
         Skip_Long_Lines on
 
     [FILTER]
-        Name kubernetes
-        Match kube.operator-inventory-hardware
-        Merge_Log on
-        Keep_Log off
-        K8S-Logging.Parser on
-        K8S-Logging.Exclude off
-        Use_Kubelet off
-        Regex_Parser k8s-container
-
-    [FILTER]
         Name modify
-        Match kube.operator-inventory-hardware
+        Match kube.var.log.containers.operator-inventory-hardware*
         Add cluster_name $CLUSTER_NAME
         Add container_name operator-inventory-hardware-discovery
 
     [OUTPUT]
         Name loki
-        Match kube.operator-inventory-hardware
+        Match kube.var.log.containers.operator-inventory-hardware*
         Host 100.70.2.34
         Port 32100
         Labels cluster_name=$CLUSTER_NAME,container_name=operator-inventory-hardware-discovery
@@ -155,46 +124,10 @@ data:
         Line_Format json
         Auto_Kubernetes_Labels false
 
-    # operator-ip
-    [INPUT]
-        Name tail
-        Tag kube.operator-ip
-        Path /var/log/containers/operator-ip-*.log
-        Parser docker
-        Refresh_Interval 10
-        Mem_Buf_Limit 5MB
-        Skip_Long_Lines on
-
-    [FILTER]
-        Name kubernetes
-        Match kube.operator-ip
-        Merge_Log on
-        Keep_Log off
-        K8S-Logging.Parser on
-        K8S-Logging.Exclude off
-        Use_Kubelet off
-        Regex_Parser k8s-container
-
-    [FILTER]
-        Name modify
-        Match kube.operator-ip
-        Add cluster_name $CLUSTER_NAME
-        Add container_name operator-ip
-
-    [OUTPUT]
-        Name loki
-        Match kube.operator-ip
-        Host 100.70.2.34
-        Port 32100
-        Labels cluster_name=$CLUSTER_NAME,container_name=operator-ip
-        Label_Keys $cluster_name,$container_name
-        Line_Format json
-        Auto_Kubernetes_Labels false
-
     # Kubernetes Events Input
     [INPUT]
         Name              kubernetes_events
-        Tag               kube.events
+        Tag               kube.var.log.kubernetes.events
         Interval_Sec      1
         Kube_URL         https://kubernetes.default.svc:443
         Kube_CA_File     /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
@@ -203,16 +136,16 @@ data:
 
     [FILTER]
         Name          modify
-        Match         kube.events
+        Match         kube.var.log.kubernetes.events
         Add          cluster_name $CLUSTER_NAME
-        Add          log_type    k8s_events
+        Add          log_type kubernetes_events
 
     [OUTPUT]
         Name          loki
-        Match         kube.events
+        Match         kube.var.log.kubernetes.events
         Host          100.70.2.34
         Port          32100
-        Labels        cluster_name=$CLUSTER_NAME,log_type=k8s_events
+        Labels        cluster_name=$CLUSTER_NAME,log_type=kubernetes_events
         Label_Keys    $cluster_name,$log_type
         Line_Format   json
         Auto_Kubernetes_Labels false
@@ -224,8 +157,3 @@ data:
         Time_Key time
         Time_Format %Y-%m-%dT%H:%M:%S.%L
         Time_Keep On
-
-    [PARSER]
-        Name k8s-container
-        Format regex
-        Regex ^(?<pod_name>[^_]+)_(?<namespace>[^_]+)_(?<container_name>[^_]+)-(?<container_id>[a-z0-9]{64})\.log$
