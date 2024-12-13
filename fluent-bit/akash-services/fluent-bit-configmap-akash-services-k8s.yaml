@@ -38,7 +38,7 @@ data:
     [OUTPUT]
         Name loki
         Match kube.var.log.containers.akash-provider*
-        Host 100.70.2.34
+        Host <host>
         Port 32100
         Labels cluster_name=<CLUSTER_NAME>,container_name=akash-provider-0
         Label_Keys $cluster_name,$container_name
@@ -72,7 +72,7 @@ data:
     [OUTPUT]
         Name loki
         Match kube.var.log.containers.operator-hostname*
-        Host 100.70.2.34
+        Host <host>
         Port 32100
         Labels cluster_name=<CLUSTER_NAME>,container_name=operator-hostname
         Label_Keys $cluster_name,$container_name
@@ -106,7 +106,7 @@ data:
     [OUTPUT]
         Name loki
         Match kube.var.log.containers.operator-inventory*
-        Host 100.70.2.34
+        Host <host>
         Port 32100
         Labels cluster_name=<CLUSTER_NAME>,container_name=operator-inventory
         Label_Keys $cluster_name,$container_name
@@ -140,7 +140,7 @@ data:
     [OUTPUT]
         Name loki
         Match kube.var.log.containers.operator-inventory-hardware*
-        Host 100.70.2.34
+        Host <host>
         Port 32100
         Labels cluster_name=<CLUSTER_NAME>,container_name=operator-inventory-hardware-discovery
         Label_Keys $cluster_name,$container_name
@@ -174,7 +174,7 @@ data:
     [OUTPUT]
         Name loki
         Match kube.var.log.containers.operator-ip*
-        Host 100.70.2.34
+        Host <host>
         Port 32100
         Labels cluster_name=<CLUSTER_NAME>,container_name=operator-ip
         Label_Keys $cluster_name,$container_name
@@ -200,7 +200,7 @@ data:
     [OUTPUT]
         Name          loki
         Match         kube.events
-        Host          100.70.2.34
+        Host          <host>
         Port          32100
         Labels        cluster_name=<CLUSTER_NAME>,log_type=kubernetes_events
         Label_Keys    $cluster_name,$log_type
