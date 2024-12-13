@@ -32,7 +32,7 @@ data:
     [FILTER]
         Name modify
         Match kube.var.log.containers.akash-provider*
-        Add cluster_name $CLUSTER_NAME
+        Add cluster_name <CLUSTER_NAME>
         Add container_name akash-provider-0
 
     [OUTPUT]
@@ -40,7 +40,7 @@ data:
         Match kube.var.log.containers.akash-provider*
         Host 100.70.2.34
         Port 32100
-        Labels cluster_name=$CLUSTER_NAME,container_name=akash-provider-0
+        Labels cluster_name=<CLUSTER_NAME>,container_name=akash-provider-0
         Label_Keys $cluster_name,$container_name
         Line_Format json
         Auto_Kubernetes_Labels false
@@ -66,7 +66,7 @@ data:
     [FILTER]
         Name modify
         Match kube.var.log.containers.operator-hostname*
-        Add cluster_name $CLUSTER_NAME
+        Add cluster_name <CLUSTER_NAME>
         Add container_name operator-hostname
 
     [OUTPUT]
@@ -74,7 +74,7 @@ data:
         Match kube.var.log.containers.operator-hostname*
         Host 100.70.2.34
         Port 32100
-        Labels cluster_name=$CLUSTER_NAME,container_name=operator-hostname
+        Labels cluster_name=<CLUSTER_NAME>,container_name=operator-hostname
         Label_Keys $cluster_name,$container_name
         Line_Format json
         Auto_Kubernetes_Labels false
@@ -100,7 +100,7 @@ data:
     [FILTER]
         Name modify
         Match kube.var.log.containers.operator-inventory*
-        Add cluster_name $CLUSTER_NAME
+        Add cluster_name <CLUSTER_NAME>
         Add container_name operator-inventory
 
     [OUTPUT]
@@ -108,7 +108,7 @@ data:
         Match kube.var.log.containers.operator-inventory*
         Host 100.70.2.34
         Port 32100
-        Labels cluster_name=$CLUSTER_NAME,container_name=operator-inventory
+        Labels cluster_name=<CLUSTER_NAME>,container_name=operator-inventory
         Label_Keys $cluster_name,$container_name
         Line_Format json
         Auto_Kubernetes_Labels false
@@ -134,7 +134,7 @@ data:
     [FILTER]
         Name modify
         Match kube.var.log.containers.operator-inventory-hardware*
-        Add cluster_name $CLUSTER_NAME
+        Add cluster_name <CLUSTER_NAME>
         Add container_name operator-inventory-hardware-discovery
 
     [OUTPUT]
@@ -142,7 +142,7 @@ data:
         Match kube.var.log.containers.operator-inventory-hardware*
         Host 100.70.2.34
         Port 32100
-        Labels cluster_name=$CLUSTER_NAME,container_name=operator-inventory-hardware-discovery
+        Labels cluster_name=<CLUSTER_NAME>,container_name=operator-inventory-hardware-discovery
         Label_Keys $cluster_name,$container_name
         Line_Format json
         Auto_Kubernetes_Labels false
@@ -168,7 +168,7 @@ data:
     [FILTER]
         Name modify
         Match kube.var.log.containers.operator-ip*
-        Add cluster_name $CLUSTER_NAME
+        Add cluster_name <CLUSTER_NAME>
         Add container_name operator-ip
 
     [OUTPUT]
@@ -176,7 +176,7 @@ data:
         Match kube.var.log.containers.operator-ip*
         Host 100.70.2.34
         Port 32100
-        Labels cluster_name=$CLUSTER_NAME,container_name=operator-ip
+        Labels cluster_name=<CLUSTER_NAME>,container_name=operator-ip
         Label_Keys $cluster_name,$container_name
         Line_Format json
         Auto_Kubernetes_Labels false
@@ -194,7 +194,7 @@ data:
     [FILTER]
         Name          modify
         Match         kube.events
-        Add          cluster_name $CLUSTER_NAME
+        Add          cluster_name <CLUSTER_NAME>
         Add          log_type kubernetes_events
 
     [OUTPUT]
@@ -202,7 +202,7 @@ data:
         Match         kube.events
         Host          100.70.2.34
         Port          32100
-        Labels        cluster_name=$CLUSTER_NAME,log_type=kubernetes_events
+        Labels        cluster_name=<CLUSTER_NAME>,log_type=kubernetes_events
         Label_Keys    $cluster_name,$log_type
         Line_Format   json
         Auto_Kubernetes_Labels false
