@@ -32,15 +32,15 @@ data:
     [FILTER]
         Name modify
         Match kube.var.log.containers.staging
-        Add log_source provider-console
+        Add cluster_name console
 
     [OUTPUT]
         Name loki
         Match kube.var.log.containers.staging
         Host <host>
         Port 32100
-        Labels log_source=provider-console
-        Label_Keys $log_source
+        Labels cluster_name=console
+        Label_Keys $cluster_name
         Line_Format json
         Auto_Kubernetes_Labels false
 
