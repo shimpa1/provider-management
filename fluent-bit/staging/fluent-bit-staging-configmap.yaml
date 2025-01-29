@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: monitoring
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush 1
+        Daemon off
+        Log_Level info
+        Parsers_File parsers.conf
+    # Container logs
+    [INPUT]
+        Name tail
+        Tag kube.var.log.containers.staging
+        Path /var/log/containers/*_staging_*.log
+        Parser docker
+        Refresh_Interval 10
+        Mem_Buf_Limit 5MB
+        Skip_Long_Lines on
+    # Pod logs
+    [INPUT]
+        Name tail
+        Tag kube.var.log.pods.staging
+        Path /var/log/pods/*_staging_*/*.log
+        Parser docker
+        Refresh_Interval 10
+        Mem_Buf_Limit 5MB
+        Skip_Long_Lines on
+    # Container logs filter
+    [FILTER]
+        Name kubernetes
+        Match kube.var.log.containers.staging
+        Merge_Log on
+        Keep_Log off
+        K8S-Logging.Parser on
+        K8S-Logging.Exclude off
+    # Pod logs filter
+    [FILTER]
+        Name kubernetes
+        Match kube.var.log.pods.staging
+        Merge_Log on
+        Keep_Log off
+        K8S-Logging.Parser on
+        K8S-Logging.Exclude off
+    # Container logs modify
+    [FILTER]
+        Name modify
+        Match kube.var.log.containers.staging
+        Add cluster_name console
+    # Pod logs modify
+    [FILTER]
+        Name modify
+        Match kube.var.log.pods.staging
+        Add cluster_name console
+    # Container logs output
+    [OUTPUT]
+        Name loki
+        Match kube.var.log.containers.staging
+        Host 100.70.2.34
+        Port 32100
+        Labels cluster_name=console
+        Label_Keys $cluster_name
+        Line_Format json
+        Auto_Kubernetes_Labels false
+    # Pod logs output
+    [OUTPUT]
+        Name loki
+        Match kube.var.log.pods.staging
+        Host 100.70.2.34
+        Port 32100
+        Labels cluster_name=console
+        Label_Keys $cluster_name
+        Line_Format json
+        Auto_Kubernetes_Labels false
+  parsers.conf: |
+    [PARSER]
+        Name docker
+        Format json
+        Time_Key time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+        Time_Keep On
