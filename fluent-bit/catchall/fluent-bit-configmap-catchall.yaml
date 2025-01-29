@@ -8,68 +8,69 @@ metadata:
 data:
   fluent-bit.conf: |
     [SERVICE]
-        Flush          1
-        Log_Level     info
-        Daemon        off
-        Parsers_File  parsers.conf
+        Flush                  1
+        Log_Level              info
+        Daemon                 off
+        Parsers_File           parsers.conf
 
     [INPUT]
-        Name              tail
-        Tag               kube.*
-        Path              /var/log/containers/*.log
-        Parser            docker
-        DB                /var/log/flb_kube.db
-        Mem_Buf_Limit     5MB
-        Skip_Long_Lines   On
-        Refresh_Interval  10
+        Name                   tail
+        Tag                    kube.*
+        Path                   /var/log/containers/*.log
+        Parser                 docker
+        DB                     /var/log/flb_kube.db
+        Mem_Buf_Limit          5MB
+        Skip_Long_Lines        On
+        Refresh_Interval       10
 
     [INPUT]
-        Name              tail
-        Tag               kube.*
-        Path              /var/log/pods/*.log
-        Parser            docker
-        DB                /var/log/flb_kube_agent.db
-        Mem_Buf_Limit     5MB
-        Skip_Long_Lines   On
-        Refresh_Interval  10
+        Name                   tail
+        Tag                    kube.*
+        Path                   /var/log/pods/*.log
+        Parser                 docker
+        DB                     /var/log/flb_kube_agent.db
+        Mem_Buf_Limit          5MB
+        Skip_Long_Lines        On
+        Refresh_Interval       10
 
     [FILTER]
-        Name                grep
-        Match               kube.*
-        Exclude            $kubernetes['namespace_name'] monitoring
+        Name                   grep
+        Match                  kube.*
+        Exclude                $kubernetes['namespace_name'] monitoring
 
     [FILTER]
-        Name modify
-        Match kube.*
-        Add cluster_name   test
+        Name                   modify
+        Match                  kube.*
+        Add                    cluster_name console
 
     [FILTER]
-        Name                kubernetes
-        Match               kube.*
-        Kube_URL           https://kubernetes.default.svc:443
-        Kube_CA_File       /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-        Kube_Token_File    /var/run/secrets/kubernetes.io/serviceaccount/token
-        Merge_Log          On
-        Merge_Log_Key      log_processed
-        K8S-Logging.Parser On
-        K8S-Logging.Exclude On
+        Name                   kubernetes
+        Match                  kube.*
+        Kube_URL               https://kubernetes.default.svc:443
+        Kube_CA_File           /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        Kube_Token_File        /var/run/secrets/kubernetes.io/serviceaccount/token
+        Merge_Log              On
+        Merge_Log_Key          log_processed
+        K8S-Logging.Parser     On
+        K8S-Logging.Exclude    On
 
     [OUTPUT]
         Name                   loki
         Match                  *
         Host                   loki.monitoring.svc.cluster.local
         Port                   3100
-        Labels                 cluster_name=$cluster_name
-        Label_Keys            $kubernetes['pod_name'],$kubernetes['namespace_name'],$kubernetes['pod_id']
-        Remove_Keys           kubernetes_labels_app,service_name,__stream_shard__
-        Line_Format           json
+        Labels                 cluster_name=$cluster_name,app=$kubernetes['labels']['app'],context=$log['context']
+        Label_Keys             $kubernetes['pod_name'],$kubernetes['namespace_name'],$kubernetes['pod_id']
+        Remove_Keys            kubernetes_labels_app,__stream_shard__,log_processed
+        Line_Format            json
         Auto_Kubernetes_Labels off
 
   parsers.conf: |
     [PARSER]
-        Name                docker
-        Format              json
-        Time_Key            time
-        Time_Format         %Y-%m-%dT%H:%M:%S.%L
-        Time_Keep           On
-        Decode_Field        json log
+        Name                   docker
+        Format                 regex
+        Regex                  ^(?<time>[^ ]+) (?<stream>stdout|stderr) (?<logtag>[F|P]) (?<log>.*)$
+        Time_Key               time
+        Time_Format            %Y-%m-%dT%H:%M:%S.%L
+        Time_Keep              On
+        Decode_Field_As        json    log
