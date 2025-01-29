@@ -58,7 +58,7 @@ data:
     [OUTPUT]
         Name loki
         Match kube.var.log.containers.staging
-        Host 100.70.2.34
+        Host <HOST>
         Port 32100
         Labels cluster_name=console
         Label_Keys $cluster_name
@@ -68,7 +68,7 @@ data:
     [OUTPUT]
         Name loki
         Match kube.var.log.pods.staging
-        Host 100.70.2.34
+        Host <HOST>
         Port 32100
         Labels cluster_name=console
         Label_Keys $cluster_name
