@@ -13,6 +13,12 @@ spec:
       labels:
         app: grafana
     spec:
+      securityContext:
+        fsGroup: 472
+        runAsUser: 472
+        runAsGroup: 472
+      nodeSelector:
+        kubernetes.io/hostname: elasticsearch0-master-val
       containers:
         - name: grafana
           image: grafana/grafana:latest
@@ -25,3 +31,18 @@ spec:
               value: "Admin"
             - name: GF_AUTH_DISABLE_LOGIN_FORM
               value: "true"
+            - name: GF_PATHS_DATA
+              value: "/data/grafana"
+            - name: GF_PATHS_LOGS
+              value: "/data/grafana/logs"
+            - name: GF_PATHS_PLUGINS
+              value: "/data/grafana/plugins"
+            - name: GF_PATHS_PROVISIONING
+              value: "/data/grafana/provisioning"
+          volumeMounts:
+            - mountPath: "/data/grafana"
+              name: grafana-storage
+      volumes:
+        - name: grafana-storage
+          persistentVolumeClaim:
+            claimName: grafana-pvc

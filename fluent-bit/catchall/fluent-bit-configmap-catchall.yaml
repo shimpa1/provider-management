@@ -64,7 +64,6 @@ data:
         Remove_Keys            kubernetes_labels_app,__stream_shard__,log_processed
         Line_Format            json
         Auto_Kubernetes_Labels off
-
   parsers.conf: |
     [PARSER]
         Name                   docker
