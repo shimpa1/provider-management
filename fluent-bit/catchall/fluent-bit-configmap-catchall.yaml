@@ -59,8 +59,8 @@ data:
         Match                  *
         Host                   loki.monitoring.svc.cluster.local
         Port                   3100
-        Labels                 cluster_name=$cluster_name,app=$kubernetes['labels']['app'],context=$log['context']
-        Label_Keys             $kubernetes['pod_name'],$kubernetes['namespace_name'],$kubernetes['pod_id']
+        Labels                 cluster_name=$cluster_name,app=$kubernetes['labels']['app'],job=$kubernetes['labels']['job'],namespace=$kubernetes['namespace_name']
+        Label_Keys             $kubernetes['namespace_name']
         Remove_Keys            kubernetes_labels_app,__stream_shard__,log_processed
         Line_Format            json
         Auto_Kubernetes_Labels off
