@@ -1,4 +1,5 @@
 clusterName: ""        # 👈 REQUIRED – e.g. "prod-eu-west"
+platform: "k3s"        # 👈 REQUIRED – "k8s" or "k3s"
 loki:
   # Primary Loki endpoint
   host: ""             # 👈 REQUIRED – IP or DNS name, e.g. "100.70.2.34"
