@@ -1,24 +1,62 @@
-A fluent-bit configmap, daemonset and all the relevant config files designed to catch, label and ship logs and events from akash-services namespace to a Loki instance.
+Fluent-bit daemonset for K8S-based clusters. It will catch all logs from pods in `akash-services` namespace and forward it to the Loki log collector.
 
-Make sure to update the CLUSTER_NAME to match your own value in files `fluent-bit-daemonset-akash-services.yaml` and `fluent-bit-configmap-akash-services-k8s.yaml` or `fluent-bit-configmap-akash-services-k3s.yaml`
+## Features
 
-Make sure to set the target <host> in the output sections of the `fluent-bit-configmap-akash-services-k3s.yaml` file.
+- **Multi-Output Support**: Logs are forwarded to up to 3 different Loki endpoints for redundancy and data distribution
+- **Container-Specific Logging**: Captures logs from akash-provider, operator-hostname, operator-inventory, operator-inventory-hardware-discovery, operator-ip, and Kubernetes events
+- **Kubernetes Integration**: Automatically enriches logs with Kubernetes metadata
 
-`kubectl -n monitoring create job fluent-bit-init --image=busybox -- /bin/sh -c "mkdir -p /var/lib/fluent-bit"`
+## How to install:
 
-`kubectl apply -f fluent-bit-service-acct.yaml`
+`kubectl create ns monitoring`
 
-`kubectl apply -f fluent-bit-clusterrole.yaml`
+### Basic Installation (Single Output)
+```
+helm install fluent-bit ./fluent-bit \
+  --namespace monitoring --create-namespace \
+  --set clusterName=my-cluster \
+  --set loki.host=<IP_address>
+```
 
-`kubectl apply -f fluent-bit-clusterrole-binding.yaml`
+### Multi-Output Installation (Up to 3 Endpoints)
+```
+helm install fluent-bit ./fluent-bit \
+  --namespace monitoring --create-namespace \
+  --set clusterName=my-cluster \
+  --set loki.host=<primary_loki_ip> \
+  --set loki.secondary.host=<secondary_loki_ip> \
+  --set loki.tertiary.host=<tertiary_loki_ip>
+```
 
-Then, depending on your architecture use either the K8S or the K3S configmap:
+## Configuration Options
 
-`kubectl apply -f fluent-bit-configmap-akash-services-k8s.yaml`
+| Parameter | Description | Required | Default |
+|-----------|-------------|----------|---------|
+| `clusterName` | Name of the cluster for log labeling | Yes | "" |
+| `loki.host` | Primary Loki endpoint host/IP | Yes | "" |
+| `loki.port` | Primary Loki endpoint port | No | 32100 |
+| `loki.secondary.host` | Secondary Loki endpoint host/IP | No | "" |
+| `loki.secondary.port` | Secondary Loki endpoint port | No | 32100 |
+| `loki.tertiary.host` | Tertiary Loki endpoint host/IP | No | "" |
+| `loki.tertiary.port` | Tertiary Loki endpoint port | No | 32100 |
+| `namespace` | Kubernetes namespace for deployment | No | "monitoring" |
 
-And last, apply the daemonset:
+## Log Sources
 
-`kubectl apply -f fluent-bit-daemonset-akash-services.yaml`
+The following log sources are captured and forwarded:
 
-Watch the reload process:
-`kubectl -n monitoring rollout status ds/fluent-bit` 
+- **akash-provider**: Provider service logs
+- **operator-hostname**: Hostname operator logs  
+- **operator-inventory**: Inventory operator logs
+- **operator-inventory-hardware-discovery**: Hardware discovery operator logs
+- **operator-ip**: IP operator logs
+- **kubernetes-events**: Kubernetes cluster events
+
+## Output Configuration
+
+Each log source is forwarded to up to 3 Loki endpoints:
+1. **Primary**: Always active if `loki.host` is configured
+2. **Secondary**: Active if `loki.secondary.host` is configured
+3. **Tertiary**: Active if `loki.tertiary.host` is configured
+
+This provides redundancy and allows for log distribution across multiple monitoring systems.
