@@ -5,6 +5,7 @@ Fluent-bit daemonset for K8S-based clusters. It will catch all logs from pods in
 - **Multi-Output Support**: Logs are forwarded to up to 3 different Loki endpoints for redundancy and data distribution
 - **Container-Specific Logging**: Captures logs from akash-provider, operator-hostname, operator-inventory, operator-inventory-hardware-discovery, operator-ip, and Kubernetes events
 - **Kubernetes Integration**: Automatically enriches logs with Kubernetes metadata
+- **Platform Support**: Supports both k8s and k3s platforms with optimized configurations
 
 ## How to install:
 
@@ -15,6 +16,7 @@ Fluent-bit daemonset for K8S-based clusters. It will catch all logs from pods in
 helm install fluent-bit ./fluent-bit \
   --namespace monitoring --create-namespace \
   --set clusterName=my-cluster \
+  --set platform=k3s \
   --set loki.host=<IP_address>
 ```
 
@@ -23,6 +25,7 @@ helm install fluent-bit ./fluent-bit \
 helm install fluent-bit ./fluent-bit \
   --namespace monitoring --create-namespace \
   --set clusterName=my-cluster \
+  --set platform=k8s \
   --set loki.host=<primary_loki_ip> \
   --set loki.secondary.host=<secondary_loki_ip> \
   --set loki.tertiary.host=<tertiary_loki_ip>
@@ -33,6 +36,7 @@ helm install fluent-bit ./fluent-bit \
 | Parameter | Description | Required | Default |
 |-----------|-------------|----------|---------|
 | `clusterName` | Name of the cluster for log labeling | Yes | "" |
+| `platform` | Platform type ("k8s" or "k3s") | Yes | "k3s" |
 | `loki.host` | Primary Loki endpoint host/IP | Yes | "" |
 | `loki.port` | Primary Loki endpoint port | No | 32100 |
 | `loki.secondary.host` | Secondary Loki endpoint host/IP | No | "" |
@@ -60,3 +64,8 @@ Each log source is forwarded to up to 3 Loki endpoints:
 3. **Tertiary**: Active if `loki.tertiary.host` is configured
 
 This provides redundancy and allows for log distribution across multiple monitoring systems.
+
+## Platform Differences
+
+- **k8s**: Uses standard Kubernetes log paths and includes additional Kubernetes filters
+- **k3s**: Uses k3s-specific log paths and simplified Kubernetes integration
