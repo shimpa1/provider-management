@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: {{ .Values.namespace }}
+data:
+  fluent-bit.conf: |
+{{- if eq .Values.platform "k8s" }}
+{{ .Files.Get "files/fluent-bit-configmap-k8s.conf" | indent 4 }}
+{{- else }}
+{{ .Files.Get "files/fluent-bit-configmap-k3s.conf" | indent 4 }}
+{{- end }}

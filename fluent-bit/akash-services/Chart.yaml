@@ -1,0 +1,7 @@
+apiVersion: v2
+name: fluent-bit
+description: Fluent-bit - Lightweight log forwarder configured for Loki
+type: application
+version: 0.1.0
+appVersion: "2.1.10"
+

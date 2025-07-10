@@ -1,0 +1,46 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: fluent-bit-role
+rules:
+{{- /* Core */}}
+  - apiGroups: [""]
+    resources: [namespaces,pods,events,nodes,services,configmaps,secrets,persistentvolumes,persistentvolumeclaims,replicationcontrollers,limitranges,resourcequotas,serviceaccounts,endpoints]
+    verbs: [get,list,watch]
+{{- /* Apps */}}
+  - apiGroups: ["apps"]
+    resources: [deployments,daemonsets,replicasets,statefulsets]
+    verbs: [get,list,watch]
+{{- /* Batch */}}
+  - apiGroups: ["batch"]
+    resources: [jobs,cronjobs]
+    verbs: [get,list,watch]
+{{- /* Autoscaling */}}
+  - apiGroups: ["autoscaling"]
+    resources: [horizontalpodautoscalers]
+    verbs: [get,list,watch]
+{{- /* Networking */}}
+  - apiGroups: ["networking.k8s.io"]
+    resources: [networkpolicies,ingresses,ingressclasses]
+    verbs: [get,list,watch]
+{{- /* Storage */}}
+  - apiGroups: ["storage.k8s.io"]
+    resources: [storageclasses,volumeattachments,csinodes]
+    verbs: [get,list,watch]
+{{- /* Policy */}}
+  - apiGroups: ["policy"]
+    resources: [poddisruptionbudgets,podsecuritypolicies]
+    verbs: [get,list,watch]
+{{- /* RBAC */}}
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: [roles,rolebindings,clusterroles,clusterrolebindings]
+    verbs: [get,list,watch]
+{{- /* Certificates */}}
+  - apiGroups: ["certificates.k8s.io"]
+    resources: [certificatesigningrequests]
+    verbs: [get,list,watch]
+{{- /* CRDs */}}
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: [customresourcedefinitions]
+    verbs: [get,list,watch]
+
